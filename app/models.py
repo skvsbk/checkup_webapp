@@ -6,10 +6,10 @@ from app import db
 class UserDB(db.Model, UserMixin):
     __tablename__ = 'users'
 
-    user_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
-    login = db.Column(db.String(10), unique=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    login = db.Column(db.String(10), unique=True, nullable=False)
     password = db.Column(db.String(256))
-    role_id = db.Column(db.Integer, db.ForeignKey('user_roles.role_id'), index=True)
+    role_id = db.Column(db.Integer, db.ForeignKey('user_roles.id'), index=True)
     name = db.Column(db.String(50))
     active = db.Column(db.Boolean())
 
@@ -22,7 +22,7 @@ class UserDB(db.Model, UserMixin):
 class RoleDB(db.Model, RoleMixin):
     __tablename__ = 'user_roles'
 
-    role_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(50))
 
     def __str__(self):
@@ -32,7 +32,7 @@ class RoleDB(db.Model, RoleMixin):
 class FacilitiesDB(db.Model):
     __tablename__ = 'facilities'
 
-    facility_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(30))
 
     def __repr__(self):
@@ -42,9 +42,9 @@ class FacilitiesDB(db.Model):
 class PlantsDB(db.Model):
     __tablename__ = 'plants'
 
-    plant_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(30))
-    facility_id = db.Column(db.Integer, db.ForeignKey('facilities.facility_id'), index=True)
+    facility_id = db.Column(db.Integer, db.ForeignKey('facilities.id'), index=True)
 
     facilities = db.relationship('FacilitiesDB')
 
@@ -55,10 +55,10 @@ class PlantsDB(db.Model):
 class ChecksDB(db.Model):
     __tablename__ = 'checks'
 
-    check_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     note = db.Column(db.String(256))
-    checkup_id = db.Column(db.Integer, db.ForeignKey('checkups.checkup_id'), index=True)
-    nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.nfc_id'), index=True)
+    checkup_id = db.Column(db.Integer, db.ForeignKey('checkups.id'), index=True)
+    nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.id'), index=True)
 
     checkups = db.relationship('CheckupsDB')
     nfctag = db.relationship('NfcTagDB')
@@ -67,10 +67,10 @@ class ChecksDB(db.Model):
 class CheckupsDB(db.Model):
     __tablename__ = 'checkups'
 
-    checkup_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     completed = db.Column(db.Boolean)
-    route_id = db.Column(db.Integer, db.ForeignKey('routes.route_id'), index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.user_id'), index=True)
+    route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
     t_start = db.Column(db.Integer)
     t_end = db.Column(db.Integer)
 
@@ -81,9 +81,9 @@ class CheckupsDB(db.Model):
 class NfcTagDB(db.Model):
     __tablename__ = 'nfc_tag'
 
-    nfc_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     nfc_serial = db.Column(db.String(14))
-    plant_id = db.Column(db.Integer, db.ForeignKey('plants.plant_id'), index=True)
+    plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), index=True)
 
     plant = db.relationship('PlantsDB')
     
@@ -91,9 +91,9 @@ class NfcTagDB(db.Model):
 class RouteLinksDB(db.Model):
     __tablename__ = 'route_links'
 
-    routelink_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
-    route_id = db.Column(db.Integer, db.ForeignKey('routes.route_id'), index=True)
-    nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.nfc_id'), index=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), index=True)
+    nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.id'), index=True)
     order = db.Column(db.Integer)
     active = db.Column(db.Boolean)
 
@@ -104,9 +104,9 @@ class RouteLinksDB(db.Model):
 class RoutesDB(db.Model):
     __tablename__ = 'routes'
 
-    route_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(30))
-    facility_id = db.Column(db.Integer, db.ForeignKey('facilities.facility_id'), index=True)
+    facility_id = db.Column(db.Integer, db.ForeignKey('facilities.id'), index=True)
     active = db.Column(db.Boolean)
 
     facilities = db.relationship('FacilitiesDB')
@@ -118,11 +118,11 @@ class RoutesDB(db.Model):
 class ValChecksDB(db.Model):
     __tablename__ = 'val_checks'
 
-    valcheck_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     value = db.Column(db.Float)
     note = db.Column(db.String(256))
-    param_id = db.Column(db.Integer, db.ForeignKey('val_params.param_id'), index=True)
-    check_id = db.Column(db.Integer, db.ForeignKey('checks.check_id'), index=True)
+    param_id = db.Column(db.Integer, db.ForeignKey('val_params.id'), index=True)
+    check_id = db.Column(db.Integer, db.ForeignKey('checks.id'), index=True)
 
     units = db.relationship('ValParamsDB')
 
@@ -133,10 +133,10 @@ class ValChecksDB(db.Model):
 class ValParamsDB(db.Model):
     __tablename__ = 'val_params'
 
-    param_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(30))
-    unit_id = db.Column(db.Integer, db.ForeignKey('val_units.unit_id'), index=True)
-    nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.nfc_id'), index=True)
+    unit_id = db.Column(db.Integer, db.ForeignKey('val_units.id'), index=True)
+    nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.id'), index=True)
     min_value = db.Column(db.Float)
     max_value = db.Column(db.Float)
 
@@ -147,7 +147,7 @@ class ValParamsDB(db.Model):
 class ValUnitsDB(db.Model):
     __tablename__ = 'val_units'
 
-    unit_id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(10))
 
     def __repr__(self):
