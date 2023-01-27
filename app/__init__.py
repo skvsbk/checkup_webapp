@@ -15,12 +15,7 @@ app.config.from_object('config.DebugConfig')
 
 
 db = SQLAlchemy(app)
-babel = Babel(app)
 
-
-@babel.localeselector
-def get_locale():
-    return 'ru'
 
 app.register_blueprint(main_bp, url_prefix="/")
 
