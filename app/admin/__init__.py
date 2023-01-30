@@ -28,8 +28,8 @@ admin.add_view(ValUnitsCustom(model=ValUnitsDB, session=db.session, name='Ед.�
 admin.add_view(RoutesCustom(model=RoutesDB, session=db.session, name='Список маршрутов',
                             category='Маршруты', menu_icon_type='fa', menu_icon_value='fa-list'))
 admin.add_view(RouteLinksCustom(model=RouteLinksDB, session=db.session, name='Точки маршрутов',
-                         category='Маршруты', menu_icon_type='fa', menu_icon_value='fa-dot-circle-o'))
+                                category='Маршруты', menu_icon_type='fa', menu_icon_value='fa-dot-circle-o'))
 admin.add_view(FacilitiesCustom(model=FacilitiesDB, session=db.session, name='Площадки',
-                         category='Расположения', menu_icon_type='fa', menu_icon_value='fa-map-o'))
+                                category='Расположения', menu_icon_type='fa', menu_icon_value='fa-map-o'))
 admin.add_view(PlantsCustom(model=PlantsDB, session=db.session, name='Оборудование',
-                         category='Расположения', menu_icon_type='fa', menu_icon_value='fa-tachometer'))
+                            category='Расположения', menu_icon_type='fa', menu_icon_value='fa-tachometer'))
