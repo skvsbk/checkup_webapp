@@ -16,7 +16,6 @@ def get_locale():
     return 'en'
 
 
-# admin.add_view(ModelView(model=UserDB, name='Пользователи', session=db.session))
 admin.add_view(UserCustom(model=UserDB, name='Пользователи', session=db.session,
                           menu_icon_type='fa', menu_icon_value='fa-users'))
 admin.add_view(NFCTagCustom(model=NfcTagDB, session=db.session, name='NFC метки',
