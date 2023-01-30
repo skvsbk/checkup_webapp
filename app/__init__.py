@@ -16,6 +16,19 @@ app.config.from_object('config.DebugConfig')
 
 db = SQLAlchemy(app)
 
+# Проверка хэша пароля
+
+# from app.models import UserDB
+# from werkzeug.security import generate_password_hash, check_password_hash
+#
+# with app.app_context():
+#     a = db.session.query(UserDB.password).filter(UserDB.login == 'admin').first()
+#     print(a)
+#     print(check_password_hash(a[0], 'admin'))
+#     b = generate_password_hash('admin')
+#     print(b)
+#     print(check_password_hash(b, 'admin'))
+
 
 app.register_blueprint(main_bp, url_prefix="/")
 
