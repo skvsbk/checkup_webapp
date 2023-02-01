@@ -1,5 +1,7 @@
-import flask
-from flask import Blueprint, render_template
+# import flask
+from flask import Blueprint, render_template, redirect
+
+
 
 
 main_bp = Blueprint('main_blueprint', __name__)
@@ -8,7 +10,12 @@ main_bp = Blueprint('main_blueprint', __name__)
 # Include main page
 # Подключение главной страницы
 @main_bp.route('/')
-def portfolio_home_route():
+def admin_route():
     # return 'Сайт работает.'
-    return flask.redirect("/admin/")
-    # return render_template('/admin/index.html')
+    return redirect("/admin")
+    # return redirect("/")
+    # return render_template('index.html')
+
+
+
+

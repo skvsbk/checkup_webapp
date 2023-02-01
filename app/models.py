@@ -15,6 +15,21 @@ class UserDB(db.Model, UserMixin):
 
     roles = db.relationship('RoleDB')
 
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self.id
+
     def __str__(self):
         return self.name
 
@@ -35,7 +50,7 @@ class FacilitiesDB(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(30))
 
-    def __repr__(self):
+    def __str__(self):
         return self.name
 
 
@@ -48,7 +63,7 @@ class PlantsDB(db.Model):
 
     facilities = db.relationship('FacilitiesDB')
 
-    def __repr__(self):
+    def __str__(self):
         return self.name
     
     
@@ -75,7 +90,7 @@ class CheckupsDB(db.Model):
     t_end = db.Column(db.Integer)
 
     routes = db.relationship('RoutesDB')
-    user = db.relationship('UserDB')
+    users = db.relationship('UserDB')
     
     
 class NfcTagDB(db.Model):
@@ -111,7 +126,7 @@ class RoutesDB(db.Model):
 
     facilities = db.relationship('FacilitiesDB')
 
-    def __repr__(self):
+    def __str__(self):
         return self.name
     
     
@@ -126,7 +141,7 @@ class ValChecksDB(db.Model):
 
     units = db.relationship('ValParamsDB')
 
-    def __repr__(self):
+    def __str__(self):
         return self.name
     
     
@@ -150,6 +165,6 @@ class ValUnitsDB(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(10))
 
-    def __repr__(self):
+    def __str__(self):
         return self.name
     

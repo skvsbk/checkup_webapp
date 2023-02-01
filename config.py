@@ -11,7 +11,6 @@ class Config(object):
     FLASK_ADMIN_SWATCH = 'cerulean'
 
 
-
 class ProductionConfig(Config):
     pass
 
