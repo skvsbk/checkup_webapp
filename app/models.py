@@ -71,9 +71,9 @@ class ChecksDB(db.Model):
     __tablename__ = 'checks'
 
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
-    note = db.Column(db.String(256))
     checkup_id = db.Column(db.Integer, db.ForeignKey('checkups.id'), index=True)
     nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.id'), index=True)
+    t_check = db.Column(db.DateTime)
 
     checkups = db.relationship('CheckupsDB')
     nfctag = db.relationship('NfcTagDB')
@@ -101,6 +101,9 @@ class NfcTagDB(db.Model):
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), index=True)
 
     plant = db.relationship('PlantsDB')
+
+    def __str__(self):
+        return f'S/N: {self.nfc_serial} - {self.plant}'
     
     
 class RouteLinksDB(db.Model):
