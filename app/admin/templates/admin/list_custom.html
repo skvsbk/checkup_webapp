@@ -1,0 +1,39 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+{{ super() }}
+<a href="javascript:history.back()">Вернуться назад</a>
+<p></p><p></p>
+
+{% for t in title %}
+    <p>{{ t|safe }}</p>
+{% endfor %}
+
+&nbsp;
+<br>
+
+<table class="table table-striped table-bordered table-hover model-list">
+    <thead>
+        <tr>
+            {% for item in tab_header %}
+                <th class="column-header">{{ item }}</th>
+            {% endfor %}
+         </tr>
+    </thead>
+    <tbody>
+        {% for row in tab_body %}
+            <tr>
+                {% for item in row %}
+                    <td>
+                        {% if item %}
+                            {{ item|safe }}
+                        {% endif %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+
+</table>
+
+{% endblock %}
