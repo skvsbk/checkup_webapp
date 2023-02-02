@@ -4,7 +4,7 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.filters import FilterLike, FilterNotLike
 from wtforms import validators, PasswordField
 from werkzeug.security import generate_password_hash
-from app.models import UserDB, RoutesDB, FacilitiesDB, PlantsDB
+from app.models import UserDB, RoleDB, RoutesDB, FacilitiesDB, PlantsDB
 
 
 class UserCustom(ModelView):
@@ -14,7 +14,9 @@ class UserCustom(ModelView):
     form_extra_fields = {
         'password': PasswordField('Пароль', [validators.DataRequired()])
     }
-    column_filters = ('login', 'roles', 'active')
+    column_filters = (FilterLike(RoleDB.name, 'Роль'),
+                      FilterNotLike(RoleDB.name, 'Роль'),
+                      'active')
     column_descriptions = dict(name='Фамилия, имя и отчество')
     # can_view_details = True
     # column_searchable_list = ("name",)
