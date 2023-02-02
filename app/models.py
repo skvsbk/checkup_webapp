@@ -72,6 +72,7 @@ class ChecksDB(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     checkup_id = db.Column(db.Integer, db.ForeignKey('checkups.id'), index=True)
+    note = db.Column(db.String(255))
     nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.id'), index=True)
     t_check = db.Column(db.DateTime)
 
@@ -86,8 +87,8 @@ class CheckupsDB(db.Model):
     completed = db.Column(db.Boolean)
     route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
-    t_start = db.Column(db.Integer)
-    t_end = db.Column(db.Integer)
+    t_start = db.Column(db.DateTime)
+    t_end = db.Column(db.DateTime)
 
     routes = db.relationship('RoutesDB')
     users = db.relationship('UserDB')
@@ -138,7 +139,6 @@ class ValChecksDB(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     value = db.Column(db.Float)
-    note = db.Column(db.String(256))
     param_id = db.Column(db.Integer, db.ForeignKey('val_params.id'), index=True)
     check_id = db.Column(db.Integer, db.ForeignKey('checks.id'), index=True)
 
