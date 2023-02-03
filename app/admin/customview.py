@@ -1,5 +1,6 @@
-from flask import Markup
+from flask import Markup, flash
 from flask_admin import expose
+from flask_admin.babel import gettext
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.filters import FilterLike, FilterNotLike
 from wtforms import validators, PasswordField
@@ -140,6 +141,17 @@ class NFCTagCustom(ModelView):
                       FilterNotLike(PlantsDB.name, 'Площадка/Оборудование'),
                       'nfc_serial',
                       'active']
+
+    # Check active status if NFC tag already exists
+    def on_model_change(self, form, model, is_created):
+        get_status = db.session.query(NfcTagDB.active).filter(NfcTagDB.nfc_serial == model.nfc_serial,
+                                                              NfcTagDB.id != model.id)
+
+        for tag in get_status:
+            for item in tag:
+                if item:
+                    model.active = False
+                    flash(gettext("Уже есть активная NFC метка. Эта буде неактивной"), 'error')
 
 
 class RoutesCustom(ModelView):
