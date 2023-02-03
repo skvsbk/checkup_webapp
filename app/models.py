@@ -100,6 +100,7 @@ class NfcTagDB(db.Model):
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     nfc_serial = db.Column(db.String(14))
     plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), index=True)
+    active = db.Column(db.Boolean)
 
     plant = db.relationship('PlantsDB')
 

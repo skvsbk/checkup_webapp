@@ -132,10 +132,14 @@ class CheckupsCustom(ModelView):
 
 
 class NFCTagCustom(ModelView):
-    column_list = ('nfc_serial', 'plant')
-    column_labels = dict(nfc_serial='Серийной номер', plant='Помещение / оборудование')
-    column_filters = [FilterLike(PlantsDB.name, 'Площадка'),
-                      FilterNotLike(PlantsDB.name, 'Площадка')]
+    # Uncomment below in prod
+    # can_delete = False
+    column_list = ('nfc_serial', 'plant', 'active')
+    column_labels = dict(nfc_serial='Серийной номер', plant='Помещение / оборудование', active='Активный')
+    column_filters = [FilterLike(PlantsDB.name, 'Площадка/Оборудование'),
+                      FilterNotLike(PlantsDB.name, 'Площадка/Оборудование'),
+                      'nfc_serial',
+                      'active']
 
 
 class RoutesCustom(ModelView):
