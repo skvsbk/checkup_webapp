@@ -3,6 +3,7 @@ from flask_security import RoleMixin
 from app import db
 
 
+# class UserDB(db.Model, UserMixin):
 class UserDB(db.Model, UserMixin):
     __tablename__ = 'users'
 
@@ -14,21 +15,6 @@ class UserDB(db.Model, UserMixin):
     active = db.Column(db.Boolean())
 
     roles = db.relationship('RoleDB')
-
-    @property
-    def is_authenticated(self):
-        return True
-
-    @property
-    def is_active(self):
-        return True
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return self.id
 
     def __str__(self):
         return self.name

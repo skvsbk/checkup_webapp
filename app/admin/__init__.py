@@ -1,16 +1,22 @@
-from flask_admin import Admin, AdminIndexView
+from flask import url_for
+from flask_admin import Admin
 from flask_admin.menu import MenuLink
 from flask_babelex import Babel
+from flask_login import LoginManager
+from flask_admin.model import BaseModelView
 
 from app import app
 from app.models import *
 from .customview import *
 
 
-admin = Admin(app, name='Журнал обходов', template_mode='bootstrap4')
+admin = Admin(app,
+              name='Журнал обходов',
+              template_mode='bootstrap4',
+              index_view=MyAdminIndexView())
 
 babel = Babel(app)
-
+login_manager = LoginManager(app)
 
 @babel.localeselector
 def get_locale():
@@ -37,30 +43,6 @@ admin.add_view(PlantsCustom(model=PlantsDB, session=db.session, name='Обору
 admin.add_view(CheckupsCustom(model=CheckupsDB, session=db.session, name='Обходы',
                               menu_icon_type='fa', menu_icon_value='fa-check-square-o'))
 
-
-
-admin.add_link(MenuLink(name='Выход', category='', url='./logout'))
-
-
-
-
-
-# Custom view example
-# from flask_admin import BaseView, expose
-# from flask import url_for
-#
-# class MyView(BaseView):
-#     @expose('/')
-#     def index(self):
-#         # url = url_for('.help')
-#         # print(url)
-#         # return self.render('admin/index1.html')
-#         url = url_for('.help')
-#         return self.render('admin/index1.html', url=url)
-#
-#     @expose('/help/')
-#     def help(self):
-#         return self.render('admin/help.html')
-#
-#
-# admin.add_view(MyView(name='Hello'))
+# from flask_login import current_user
+# admin.add_link(MenuLink(name=current_user, category='', url='/admin'))
+admin.add_link(MenuLink(name='Выход', category='', url='logout'))
