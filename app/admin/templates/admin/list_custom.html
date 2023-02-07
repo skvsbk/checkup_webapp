@@ -5,6 +5,15 @@
 <link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}">
 {% endblock %}
 
+{% block page_body %}
+<div class="container">
+
+    <p align="right">{{ user_name }}</p>
+
+</div>
+{{ super() }}
+{% endblock %}
+
 {% block body %}
 {{ super() }}
 <a href="javascript:history.back()">Вернуться назад</a>

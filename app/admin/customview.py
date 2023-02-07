@@ -56,13 +56,30 @@ class MenuLinkLogout(MenuLink):
         return url_for("admin_bp.logout")
 
 
-class MixinTemplate:
-    ModelView.list_template = 'admin/list_template.html'
-    ModelView.edit_template = 'admin/edit_template.html'
-    ModelView.create_template = 'admin/create_template.html'
+class BaseCustomView(ModelView):
+    list_template = 'admin/list_template.html'
+    edit_template = 'admin/edit_template.html'
+    create_template = 'admin/create_template.html'
+
+    def is_accessible(self):
+        try:
+            current_role = RoleDB().query.get(current_user.role_id)
+            if current_role.name == 'admin':
+                return current_user.is_authenticated
+            return False
+        except AttributeError:
+            return abort(403)
+
+    @expose('/')
+    def index_view(self):
+        return super().index_view()
+
+    def render(self, template, **kwargs):
+        kwargs['user_name'] = current_user.name
+        return super().render(template, **kwargs)
 
 
-class UserCustom(ModelView, MixinTemplate):
+class UserCustom(BaseCustomView):
     column_list = ('name', 'login', 'roles', 'active')
     column_labels = dict(name='ФИО', login='Имя входа', roles='Роль', active='Активный')
     form_columns = ('name', 'login', 'roles', 'password', 'active')
@@ -74,51 +91,24 @@ class UserCustom(ModelView, MixinTemplate):
                       'active')
     column_descriptions = dict(name='Фамилия, имя и отчество')
 
-    def is_accessible(self):
-        try:
-            current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
-                return current_user.is_authenticated
-            return False
-        except AttributeError:
-            return abort(403)
-
     # Encrypt password before create/update
     def on_model_change(self, form, model, is_created):
         hashed_password = generate_password_hash(model.password)
         model.password = hashed_password
 
 
-class FacilitiesCustom(ModelView, MixinTemplate):
+class FacilitiesCustom(BaseCustomView):
     column_labels = dict(name='Наименование')
 
-    def is_accessible(self):
-        try:
-            current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
-                return current_user.is_authenticated
-            return False
-        except AttributeError:
-            return abort(403)
 
-
-class PlantsCustom(ModelView, MixinTemplate):
+class PlantsCustom(BaseCustomView):
     column_labels = dict(facilities='Площадка', name='Помещение / Оборудование')
     column_filters = [FilterLike(FacilitiesDB.name, 'Площадка'),
                       FilterNotLike(FacilitiesDB.name, 'Площадка'),
                       'name']
 
-    def is_accessible(self):
-        try:
-            current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
-                return current_user.is_authenticated
-            return False
-        except AttributeError:
-            return abort(403)
 
-
-class CheckupsCustom(ModelView, MixinTemplate):
+class CheckupsCustom(BaseCustomView):
     # Uncomment below in prod
     # can_delete = False
     # can_edit = False
@@ -166,7 +156,7 @@ class CheckupsCustom(ModelView, MixinTemplate):
             join(FacilitiesDB, FacilitiesDB.id == RoutesDB.facility_id).\
             join(UserDB, UserDB.id == CheckupsDB.user_id).filter(CheckupsDB.id == checkup_id).first()
 
-        list_title = list([f'Площадка: {get_title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Маршрут: {get_title[1]}'])
+        list_title = list([f'Площадка: {get_title[0]} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Маршрут: {get_title[1]}'])
         list_title.append(f'Исполнитель: {get_title[2]} ')
         list_title.append(f'Начало обхода: {get_title[3]} &nbsp;&nbsp;&nbsp; Конец обхода: {get_title[4]}')
         if get_title[5]:
@@ -204,7 +194,7 @@ class CheckupsCustom(ModelView, MixinTemplate):
         tab_body = []
         for item in get_body:
             if item[4] is not None and item[3] <= item[4] <= item[5]:
-                tab_body.append([item, item[1], item[2], item[3], f'<a style="color:#008000">{item[4]}</a>',
+                tab_body.append([item[0], item[1], item[2], item[3], f'<a style="color:#008000">{item[4]}</a>',
                                  item[5], item[6], item[7]])
             elif item[4] is not None and not item[3] <= item[4] <= item[5]:
                 tab_body.append([item[0], item[1], item[2], item[3], f'<a style="color:#ff0000">{item[4]}</a>',
@@ -214,7 +204,7 @@ class CheckupsCustom(ModelView, MixinTemplate):
         return self.render('admin/list_custom.html', title=list_title, tab_header=tab_header, tab_body=tab_body)
 
 
-class NFCTagCustom(ModelView, MixinTemplate):
+class NFCTagCustom(BaseCustomView):
 
     # Uncomment below in prod
     # can_delete = False
@@ -225,15 +215,6 @@ class NFCTagCustom(ModelView, MixinTemplate):
                       'nfc_serial',
                       'active']
 
-    def is_accessible(self):
-        try:
-            current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name in ('admin', 'user_webapp'):
-                return current_user.is_authenticated
-            return False
-        except AttributeError:
-            return abort(403)
-
     # Check active status if NFC tag already exists
     def on_model_change(self, form, model, is_created):
         get_status = db.session.query(NfcTagDB.active).filter(NfcTagDB.nfc_serial == model.nfc_serial,
@@ -243,24 +224,15 @@ class NFCTagCustom(ModelView, MixinTemplate):
             for item in tag:
                 if item:
                     model.active = False
-                    flash(gettext("Уже есть активная NFC метка. Эта буде неактивной"), 'error')
+                    flash(gettext("Уже есть активная NFC метка. Эта будет неактивной"), 'error')
 
 
-class RoutesCustom(ModelView, MixinTemplate):
+class RoutesCustom(BaseCustomView):
     column_list = ('name', 'facilities', 'active')
     column_labels = dict(name='Наименование маршрута', facilities='Площадка', active='Активен')
     column_filters = [FilterLike(FacilitiesDB.name, 'Площадка'),
                       FilterNotLike(FacilitiesDB.name, 'Площадка'),
                       'active']
-
-    def is_accessible(self):
-        try:
-            current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name in ('admin', 'user_webapp'):
-                return current_user.is_authenticated
-            return False
-        except AttributeError:
-            return abort(403)
 
     # ***** Make url links and get new pages *****
     @staticmethod
@@ -304,7 +276,7 @@ class RoutesCustom(ModelView, MixinTemplate):
         return self.render('admin/list_custom.html', title=title, tab_header=tab_header, tab_body=tab_body)
 
 
-class RouteLinksCustom(ModelView, MixinTemplate):
+class RouteLinksCustom(BaseCustomView):
     column_list = ('routes', 'nfctag', 'order', 'active')
     column_labels = dict(routes='Маршрут', nfctag='NFC tag', order='Порядок', active='Активен')
     column_default_sort = 'order'
@@ -312,39 +284,12 @@ class RouteLinksCustom(ModelView, MixinTemplate):
                       FilterNotLike(RoutesDB.name, 'Маршрут'),
                       'active']
 
-    def is_accessible(self):
-        try:
-            current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name in ('admin', 'user_webapp'):
-                return current_user.is_authenticated
-            return False
-        except AttributeError:
-            return abort(403)
 
-
-class ValParamsCustom(ModelView, MixinTemplate):
+class ValParamsCustom(BaseCustomView):
     column_list = ('name', 'min_value', 'max_value', 'units', 'nfctag')
     column_labels = dict(name='Наименование', min_value='Мин.знач.', max_value='Мкас.знач.',
                          units='Ед.изм.', nfctag='NFC tag')
 
-    def is_accessible(self):
-        try:
-            current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name in ('admin', 'user_webapp'):
-                return current_user.is_authenticated
-            return False
-        except AttributeError:
-            return abort(403)
 
-
-class ValUnitsCustom(ModelView, MixinTemplate):
+class ValUnitsCustom(BaseCustomView):
     column_labels = dict(name='Наименование')
-
-    def is_accessible(self):
-        try:
-            current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name in ('admin', 'user_webapp'):
-                return current_user.is_authenticated
-            return False
-        except AttributeError:
-            return abort(403)
