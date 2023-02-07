@@ -3,7 +3,6 @@ from flask_babelex import Babel
 from flask_login import LoginManager
 
 from app import app
-from app.models import *
 from .customview import *
 
 

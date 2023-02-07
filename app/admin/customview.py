@@ -1,4 +1,4 @@
-from flask import Markup, flash, url_for, abort
+from flask import Markup, flash, url_for, redirect
 from flask_admin import AdminIndexView, expose
 from flask_admin.babel import gettext
 from flask_admin.contrib.sqla import ModelView
@@ -20,6 +20,8 @@ class MyAdminIndexView(AdminIndexView):
         user_name = ''
         if not current_user.is_anonymous:
             user_name = current_user.name
+        else:
+            return redirect(url_for('admin_bp.login'))
 
         facilities = db.session.query(FacilitiesDB).order_by(FacilitiesDB.id).all()
 
@@ -68,15 +70,17 @@ class BaseCustomView(ModelView):
                 return current_user.is_authenticated
             return False
         except AttributeError:
-            return abort(403)
+            return redirect(url_for("admin_bp.login"))
 
     @expose('/')
     def index_view(self):
         return super().index_view()
 
     def render(self, template, **kwargs):
-        kwargs['user_name'] = current_user.name
-        return super().render(template, **kwargs)
+        if current_user.is_authenticated:
+            kwargs['user_name'] = current_user.name
+            return super().render(template, **kwargs)
+        return redirect(url_for("admin_bp.login"))
 
 
 class UserCustom(BaseCustomView):
@@ -127,7 +131,7 @@ class CheckupsCustom(BaseCustomView):
                 return current_user.is_authenticated
             return False
         except AttributeError:
-            return abort(403)
+            return redirect(url_for("admin_bp.login"))
 
     # ***** Make url links and get new pages *****
     @staticmethod

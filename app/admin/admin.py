@@ -1,10 +1,9 @@
 from flask import Blueprint, request, redirect, url_for, render_template, flash
-from flask_login import login_user, logout_user
+from flask_login import login_user, logout_user, current_user
 from werkzeug.security import check_password_hash
 from app.models import UserDB, RoleDB
 from app.admin import login_manager
 from app import db
-from datetime import timedelta
 
 
 admin_bp = Blueprint('admin_bp', __name__, template_folder='templates', static_folder='static')
@@ -18,6 +17,9 @@ def load_user(user_id):
 
 @admin_bp.route('/login', methods=['POST', 'GET'])
 def login():
+    if current_user.is_authenticated:
+        return redirect('./')
+
     if request.method == 'POST':
         try:
             user = db.session.query(UserDB).filter(UserDB.login == request.form['user']).one()
