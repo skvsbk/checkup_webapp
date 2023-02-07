@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, url_for
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from .routes import main_bp
@@ -20,4 +20,3 @@ db = SQLAlchemy(app)
 from .admin.admin import admin_bp
 app.register_blueprint(main_bp, url_prefix="/")
 app.register_blueprint(admin_bp, url_prefix="/admin")
-# app.register_blueprint(login_bp, url_prefix="/login")

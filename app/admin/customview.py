@@ -1,8 +1,9 @@
-from flask import Markup, flash, abort
+from flask import Markup, flash, url_for, abort
 from flask_admin import AdminIndexView, expose
 from flask_admin.babel import gettext
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.filters import FilterLike, FilterNotLike
+from flask_admin.menu import MenuLink
 from wtforms import validators, PasswordField
 from werkzeug.security import generate_password_hash
 from app.models import *
@@ -50,6 +51,11 @@ class MyAdminIndexView(AdminIndexView):
         return self.render('admin/dashboard.html', user_name=user_name, tab_header=tab_header, tab_body=tab_body)
 
 
+class MenuLinkLogout(MenuLink):
+    def get_url(self):
+        return url_for("admin_bp.logout")
+
+
 class MixinTemplate:
     ModelView.list_template = 'admin/list_template.html'
     ModelView.edit_template = 'admin/edit_template.html'
@@ -73,10 +79,11 @@ class UserCustom(ModelView, MixinTemplate):
             current_role = RoleDB().query.get(current_user.role_id)
             if current_role.name == 'admin':
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)
 
-    # Mangle password before create/update
+    # Encrypt password before create/update
     def on_model_change(self, form, model, is_created):
         hashed_password = generate_password_hash(model.password)
         model.password = hashed_password
@@ -90,7 +97,8 @@ class FacilitiesCustom(ModelView, MixinTemplate):
             current_role = RoleDB().query.get(current_user.role_id)
             if current_role.name == 'admin':
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)
 
 
@@ -105,7 +113,8 @@ class PlantsCustom(ModelView, MixinTemplate):
             current_role = RoleDB().query.get(current_user.role_id)
             if current_role.name == 'admin':
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)
 
 
@@ -126,10 +135,11 @@ class CheckupsCustom(ModelView, MixinTemplate):
             current_role = RoleDB().query.get(current_user.role_id)
             if current_role.name in ('admin', 'user_webapp'):
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)
 
-# ***** Make url links and get new pages *****
+    # ***** Make url links and get new pages *****
     @staticmethod
     def _formatter(view, context, model, name):
         if model:
@@ -141,7 +151,7 @@ class CheckupsCustom(ModelView, MixinTemplate):
     column_formatters = {"t_start": _formatter}
 
     @expose('/<checkup_id>')
-    def user_det(self, checkup_id):
+    def checkup(self, checkup_id):
         """
         SELECT facilities.name, routes.name, users.name, checkups.t_start, checkups.t_end, checkups.completed
         FROM checkups
@@ -218,9 +228,10 @@ class NFCTagCustom(ModelView, MixinTemplate):
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
+            if current_role.name in ('admin', 'user_webapp'):
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)
 
     # Check active status if NFC tag already exists
@@ -245,9 +256,10 @@ class RoutesCustom(ModelView, MixinTemplate):
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
+            if current_role.name in ('admin', 'user_webapp'):
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)
 
     # ***** Make url links and get new pages *****
@@ -272,7 +284,7 @@ class RoutesCustom(ModelView, MixinTemplate):
                       'Мин.значение',
                       'Макс.значение',
                       'Ед.изм']
-        query = """
+        """
         SELECT route_links.order, plants.name, nfc_tag.nfc_serial, 
         val_params.min_value, val_params.max_value, val_units.name FROM route_links 
         JOIN nfc_tag ON nfc_tag.id = route_links.nfc_id
@@ -303,9 +315,10 @@ class RouteLinksCustom(ModelView, MixinTemplate):
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
+            if current_role.name in ('admin', 'user_webapp'):
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)
 
 
@@ -317,9 +330,10 @@ class ValParamsCustom(ModelView, MixinTemplate):
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
+            if current_role.name in ('admin', 'user_webapp'):
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)
 
 
@@ -329,7 +343,8 @@ class ValUnitsCustom(ModelView, MixinTemplate):
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
+            if current_role.name in ('admin', 'user_webapp'):
                 return current_user.is_authenticated
-        except:
+            return False
+        except AttributeError:
             return abort(403)

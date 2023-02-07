@@ -1,16 +1,12 @@
-from flask import Blueprint, render_template, redirect
+from flask import Blueprint, redirect
+from flask_login import current_user
 
 
 main_bp = Blueprint('main_blueprint', __name__)
 
-# Include main page
-# Подключение главной страницы
+
 @main_bp.route('/')
 def admin_route():
-    # return 'Сайт работает.'
-    if True:
-        return redirect("/admin/login")
-    return redirect("/admin")
-    # return redirect("/")
-    # return render_template('index.html')
-
+    if current_user.is_authenticated:
+        return redirect('/admin')
+    return redirect('/admin/login')

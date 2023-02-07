@@ -1,24 +1,14 @@
-{% extends 'admin/base_admin.html' %}
+<!DOCTYPE html>
+<html>
 
+<head>
+	<link rel="shortcut icon" href="{{ url_for('static', filename='logo.png') }}">
+	<link type="text/css"     href="{{ url_for('static', filename='css/login.css')}}" rel="stylesheet" />
+	<title>{{ title }}</title>
+</head>
 
-{% block content %}
-{{ super() }}
-
-<!--<div id="login" class="wnd_dlg_back login_wnd">-->
-<!--	<div class="login">-->
-<!--		<p class="title">Админ-панель</p>-->
-
-<!--	{% for cat, msg in get_flashed_messages(True) %}-->
-<!--		<div class="flash {{cat}}">{{msg}}</div>-->
-<!--	{% endfor %}-->
-<!--		<form action="" method="post">-->
-<!--			<p><label class="form-label">Логин: </label><input type="text" name="user" />-->
-<!--			<p><label class="form-label">Пароль: </label><input type="password" name="password" />-->
-<!--			<p align="left"><input class="login_button" type="submit" value="Войти">-->
-<!--		</form>-->
-<!--	</div>-->
-<!--</div>-->
-
+<body>
+<div class="content">
 <div class="registration-cssave">
 
     <form action="" method="post">
@@ -34,14 +24,14 @@
         <div class="form-group">
             <input class="form-control item" type="password" name="password" minlength="1" id="password" placeholder="Пароль" required>
         </div>
-        <div class="form-group">
-            <label><input type="checkbox" value="1" name="rememberme">Запомнить</label>
-        </div>
+<!--        <div class="form-group">-->
+<!--            <label><input type="checkbox" value="1" name="rememberme">Запомнить</label>-->
+<!--        </div>-->
         <div class="form-group">
             <button class="btn btn-primary btn-block create-account" type="submit">Вход</button>
         </div>
     </form>
 </div>
-
-
-{% endblock %}
+</div>
+</body>
+</html>

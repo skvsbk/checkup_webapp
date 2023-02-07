@@ -1,9 +1,6 @@
-from flask import url_for
 from flask_admin import Admin
-from flask_admin.menu import MenuLink
 from flask_babelex import Babel
 from flask_login import LoginManager
-from flask_admin.model import BaseModelView
 
 from app import app
 from app.models import *
@@ -17,6 +14,7 @@ admin = Admin(app,
 
 babel = Babel(app)
 login_manager = LoginManager(app)
+
 
 @babel.localeselector
 def get_locale():
@@ -43,6 +41,7 @@ admin.add_view(PlantsCustom(model=PlantsDB, session=db.session, name='Обору
 admin.add_view(CheckupsCustom(model=CheckupsDB, session=db.session, name='Обходы',
                               menu_icon_type='fa', menu_icon_value='fa-check-square-o'))
 
-# from flask_login import current_user
-# admin.add_link(MenuLink(name=current_user, category='', url='/admin'))
-admin.add_link(MenuLink(name='Выход', category='', url='logout'))
+# admin.add_link(MenuLink(name='Выход', category='', url='logout'))
+
+
+admin.add_link(MenuLinkLogout(name='Выход'))

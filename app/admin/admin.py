@@ -1,4 +1,4 @@
-from flask import Blueprint, request, redirect, url_for, render_template, session, flash
+from flask import Blueprint, request, redirect, url_for, render_template, flash
 from flask_login import login_user, logout_user
 from werkzeug.security import check_password_hash
 from app.models import UserDB, RoleDB
@@ -24,10 +24,11 @@ def login():
             if check_password_hash(user.password, request.form['password']):
                 role = db.session.query(RoleDB).filter(RoleDB.id == user.role_id).one()
                 if role.name in ('admin', 'user_webapp'):
-                    if request.form.get('rememberme'):
-                        login_user(user, remember=True, duration=timedelta(days=7))
-                    else:
-                        login_user(user)
+                    # if request.form.get('rememberme'):
+                    #     login_user(user, remember=True, duration=timedelta(days=7))
+                    # else:
+                    #     login_user(user)
+                    login_user(user)
                     return redirect('./')
                 else:
                     flash("Не та роль", 'error')
@@ -42,4 +43,4 @@ def login():
 @admin_bp.route('/logout', methods=['POST', 'GET'])
 def logout():
     logout_user()
-    return redirect(url_for('.login'))
+    return redirect(url_for('admin_bp.login'))
