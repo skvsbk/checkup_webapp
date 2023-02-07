@@ -41,7 +41,4 @@ admin.add_view(PlantsCustom(model=PlantsDB, session=db.session, name='Обору
 admin.add_view(CheckupsCustom(model=CheckupsDB, session=db.session, name='Обходы',
                               menu_icon_type='fa', menu_icon_value='fa-check-square-o'))
 
-# admin.add_link(MenuLink(name='Выход', category='', url='logout'))
-
-
 admin.add_link(MenuLinkLogout(name='Выход'))
