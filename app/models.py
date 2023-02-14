@@ -24,10 +24,10 @@ class RoleDB(db.Model, RoleMixin):
     __tablename__ = 'user_roles'
 
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
-    name = db.Column(db.String(50))
+    role_name = db.Column(db.String(50))
 
     def __str__(self):
-        return self.name
+        return self.role_name
 
 
 class FacilitiesDB(db.Model):

@@ -25,7 +25,7 @@ def login():
             user = db.session.query(UserDB).filter(UserDB.login == request.form['user']).one()
             if check_password_hash(user.password, request.form['password']):
                 role = db.session.query(RoleDB).filter(RoleDB.id == user.role_id).one()
-                if role.name in ('admin', 'user_webapp'):
+                if role.role_name in ('admin', 'user_webapp'):
                     # if request.form.get('rememberme'):
                     #     login_user(user, remember=True, duration=timedelta(days=7))
                     # else:

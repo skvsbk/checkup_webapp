@@ -66,7 +66,7 @@ class BaseCustomView(ModelView):
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name == 'admin':
+            if current_role.role_name == 'admin':
                 return current_user.is_authenticated
             return False
         except AttributeError:
@@ -90,8 +90,8 @@ class UserCustom(BaseCustomView):
     form_extra_fields = {
         'password': PasswordField('Пароль', [validators.DataRequired()])
     }
-    column_filters = (FilterLike(RoleDB.name, 'Роль'),
-                      FilterNotLike(RoleDB.name, 'Роль'),
+    column_filters = (FilterLike(RoleDB.role_name, 'Роль'),
+                      FilterNotLike(RoleDB.role_name, 'Роль'),
                       'active')
     column_descriptions = dict(name='Фамилия, имя и отчество')
 
@@ -127,7 +127,7 @@ class CheckupsCustom(BaseCustomView):
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.name in ('admin', 'user_webapp'):
+            if current_role.role_name in ('admin', 'user_webapp'):
                 return current_user.is_authenticated
             return False
         except AttributeError:
