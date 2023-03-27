@@ -4,11 +4,11 @@ from flask_admin.babel import gettext
 from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.filters import FilterLike, FilterNotLike
 from flask_admin.menu import MenuLink
+from flask_login import current_user
 from wtforms import validators, PasswordField
-from werkzeug.security import generate_password_hash
+import hashlib
 from app.models import *
 from app import db
-from flask_login import current_user
 
 
 class MyAdminIndexView(AdminIndexView):
@@ -25,22 +25,24 @@ class MyAdminIndexView(AdminIndexView):
 
         facilities = db.session.query(FacilitiesDB).order_by(FacilitiesDB.id).all()
 
-        """ SELECT checkups.t_start, users.name, routes.name, facilities.name, checkups.completed FROM checkups
-            JOIN users ON users.id=checkups.user_id
-            JOIN routes ON routes.id=checkups.route_id
-            JOIN facilities ON facilities.id=routes.facility_id
-            WHERE facilities.id=1"""
+        """ 
+        SELECT checkup_headers.time_start, users.name, routes.name, facilities.name, checkup_headers.is_complete FROM checkup_headers
+        JOIN users ON users.id=checkup_headers.user_id
+        JOIN routes ON routes.id=checkup_headers.route_id
+        JOIN facilities ON facilities.id=routes.facility_id
+        WHERE facilities.id=1
+        """
         tab_body = {}
         for facility in facilities:
             checkups_list = []
-            checkups = db.session.query(CheckupsDB.t_start, RoutesDB.name, UserDB.name,
-                                        CheckupsDB.completed, CheckupsDB.id).\
-                join(UserDB, UserDB.id == CheckupsDB.user_id).\
-                join(RoutesDB, RoutesDB.id == CheckupsDB.route_id).\
+            checkups = db.session.query(CheckupHeadersDB.time_start, RoutesDB.name, UserDB.name,
+                                        CheckupHeadersDB.is_complete, CheckupHeadersDB.id).\
+                join(UserDB, UserDB.id == CheckupHeadersDB.user_id).\
+                join(RoutesDB, RoutesDB.id == CheckupHeadersDB.route_id).\
                 join(FacilitiesDB, FacilitiesDB.id == RoutesDB.facility_id).\
-                filter(FacilitiesDB.id == facility.id).order_by(CheckupsDB.t_start.desc()).limit(6).all()[::-1]
+                filter(FacilitiesDB.id == facility.id).order_by(CheckupHeadersDB.time_start.desc()).limit(6).all()[::-1]
             for item in checkups:
-                markup_string = "<a href='/admin/checkupsdb/%s'>%s</a>" % (item[4], item[0])
+                markup_string = "<a href='/admin/checkupheadersdb/%s'>%s</a>" % (item[4], item[0])
                 item_to_tab = list(i for i in item)
                 item_to_tab[0] = markup_string
                 checkups_list.append(item_to_tab)
@@ -66,7 +68,7 @@ class BaseCustomView(ModelView):
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.role_name == 'admin':
+            if current_role.name == 'admin':
                 return current_user.is_authenticated
             return False
         except AttributeError:
@@ -90,15 +92,16 @@ class UserCustom(BaseCustomView):
     form_extra_fields = {
         'password': PasswordField('Пароль', [validators.DataRequired()])
     }
-    column_filters = (FilterLike(RoleDB.role_name, 'Роль'),
-                      FilterNotLike(RoleDB.role_name, 'Роль'),
+    column_filters = (FilterLike(RoleDB.name, 'Роль'),
+                      FilterNotLike(RoleDB.name, 'Роль'),
                       'active')
     column_descriptions = dict(name='Фамилия, имя и отчество')
 
     # Encrypt password before create/update
     def on_model_change(self, form, model, is_created):
-        hashed_password = generate_password_hash(model.password)
-        model.password = hashed_password
+        password = model.password
+        hashed_password = hashlib.md5(password.encode('utf-8'))
+        model.password = hashed_password.hexdigest()
 
 
 class FacilitiesCustom(BaseCustomView):
@@ -116,18 +119,18 @@ class CheckupsCustom(BaseCustomView):
     # Uncomment below in prod
     # can_delete = False
     # can_edit = False
-    column_list = ('t_start', 'routes', 'users', 'completed')
-    column_labels = dict(t_start='Начало обхода', routes='Маршрут', users='Сотрудник', completed='Обход завешен')
+    column_list = ('time_start', 'routes', 'users', 'is_complete')
+    column_labels = dict(time_start='Начало обхода', routes='Маршрут', users='Сотрудник', is_complete='Обход завешен')
     column_filters = [FilterLike(UserDB.name, 'Сотрудник'),
                       FilterNotLike(UserDB.name, 'Сотрудник'),
                       FilterLike(RoutesDB.name, 'Маршрут'),
                       FilterNotLike(RoutesDB.name, 'Маршрут'),
-                      'completed']
+                      'is_complete']
 
     def is_accessible(self):
         try:
             current_role = RoleDB().query.get(current_user.role_id)
-            if current_role.role_name in ('admin', 'user_webapp'):
+            if current_role.name in ('admin', 'user_webapp'):
                 return current_user.is_authenticated
             return False
         except AttributeError:
@@ -137,28 +140,28 @@ class CheckupsCustom(BaseCustomView):
     @staticmethod
     def _formatter(view, context, model, name):
         if model:
-            markup_string = "<a href='%s'>%s</a>" % (model.id, model.t_start)
+            markup_string = "<a href='%s'>%s</a>" % (model.id, model.time_start)
             return Markup(markup_string)
         else:
             return ""
 
-    column_formatters = {"t_start": _formatter}
+    column_formatters = {"time_start": _formatter}
 
     @expose('/<checkup_id>')
     def checkup(self, checkup_id):
         """
-        SELECT facilities.name, routes.name, users.name, checkups.t_start, checkups.t_end, checkups.completed
-        FROM checkups
-        JOIN routes ON routes.id = checkups.route_id
+        SELECT facilities.name, routes.name, users.name, checkup_headers.time_start, checkup_headers.time_finish, checkup_headers.is_complete
+        FROM checkup_headers
+        JOIN routes ON routes.id = checkup_headers.route_id
         JOIN facilities ON facilities.id = routes.facility_id
-        JOIN users ON users.id = checkups.user_id
-        WHERE checkups.id = 2
+        JOIN users ON users.id = checkup_headers.user_id
+        WHERE checkup_headers.id = 277
         """
         get_title = db.session.query(FacilitiesDB.name, RoutesDB.name, UserDB.name,
-                                     CheckupsDB.t_start, CheckupsDB.t_end, CheckupsDB.completed).\
-            join(RoutesDB, RoutesDB.id == CheckupsDB.route_id).\
+                                     CheckupHeadersDB.time_start, CheckupHeadersDB.time_finish, CheckupHeadersDB.is_complete).\
+            join(RoutesDB, RoutesDB.id == CheckupHeadersDB.route_id).\
             join(FacilitiesDB, FacilitiesDB.id == RoutesDB.facility_id).\
-            join(UserDB, UserDB.id == CheckupsDB.user_id).filter(CheckupsDB.id == checkup_id).first()
+            join(UserDB, UserDB.id == CheckupHeadersDB.user_id).filter(CheckupHeadersDB.id == checkup_id).first()
 
         list_title = list([f'Площадка: {get_title[0]} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Маршрут: {get_title[1]}'])
         list_title.append(f'Исполнитель: {get_title[2]} ')
@@ -178,22 +181,14 @@ class CheckupsCustom(BaseCustomView):
                       'Комментарий']
 
         """
-        SELECT checks.t_check, plants.name, val_params.name, val_params.min_value, 
-        val_checks.value, val_params.max_value, val_units.name, checks.note from checks 
-        JOIN nfc_tag ON nfc_tag.id = checks.nfc_id
-        JOIN plants ON plants.id = nfc_tag.plant_id
-        LEFT JOIN val_params ON val_params.nfc_id = nfc_tag.id
-        LEFT JOIN val_units ON val_units.id = val_params.unit_id
-        LEFT JOIN val_checks ON val_checks.check_id = checks.id
-        WHERE checks.checkup_id = 2
+        SELECT checkup_details.time_check, checkup_details.plant_name, checkup_details.val_name, checkup_details.val_min, 
+        checkup_details.val_fact, checkup_details.val_max, checkup_details.unit_name, checkup_details.note from checkup_details
+        WHERE checkup_details.header_id = 280
         """
-        get_body = db.session.query(ChecksDB.t_check, PlantsDB.name, ValParamsDB.name, ValParamsDB.min_value,
-                                    ValChecksDB.value, ValParamsDB.max_value, ValUnitsDB.name, ChecksDB.note). \
-            join(NfcTagDB, NfcTagDB.id == ChecksDB.nfc_id).join(PlantsDB, PlantsDB.id == NfcTagDB.plant_id). \
-            outerjoin(ValParamsDB, ValParamsDB.nfc_id == NfcTagDB.id). \
-            outerjoin(ValUnitsDB, ValUnitsDB.id == ValParamsDB.unit_id). \
-            outerjoin(ValChecksDB, ValChecksDB.check_id == ChecksDB.id). \
-            filter(ChecksDB.checkup_id == checkup_id)
+        get_body = db.session.query(CheckupDetailsDB.time_check, CheckupDetailsDB.plant_name, CheckupDetailsDB.val_name,
+                                    CheckupDetailsDB.val_min, CheckupDetailsDB.val_fact, CheckupDetailsDB.val_max,
+                                    CheckupDetailsDB.unit_name, CheckupDetailsDB.note). \
+            filter(CheckupDetailsDB.header_id == checkup_id)
 
         tab_body = []
         for item in get_body:
@@ -265,7 +260,7 @@ class RoutesCustom(BaseCustomView):
         val_params.min_value, val_params.max_value, val_units.name FROM route_links 
         JOIN nfc_tag ON nfc_tag.id = route_links.nfc_id
         JOIN plants ON plants.id = nfc_tag.plant_id
-        LEFT JOIN val_params ON val_params.nfc_id = nfc_tag.id
+        LEFT JOIN val_params ON val_params.plant_id = plants.id
         LEFT JOIN val_units ON val_units.id = val_params.unit_id
         WHERE route_links.route_id = '2' AND route_links.active = 1
         """
@@ -273,7 +268,7 @@ class RoutesCustom(BaseCustomView):
         tab_body = db.session.query(RouteLinksDB.order, PlantsDB.name, NfcTagDB.nfc_serial,
                                     ValParamsDB.min_value, ValParamsDB.max_value, ValUnitsDB.name). \
             join(NfcTagDB, NfcTagDB.id == RouteLinksDB.nfc_id).join(PlantsDB, PlantsDB.id == NfcTagDB.plant_id). \
-            outerjoin(ValParamsDB, ValParamsDB.nfc_id == NfcTagDB.id).\
+            outerjoin(ValParamsDB, ValParamsDB.plant_id == PlantsDB.id).\
             outerjoin(ValUnitsDB, ValUnitsDB.id == ValParamsDB.unit_id).\
             filter(RouteLinksDB.route_id == route_id, RouteLinksDB.active == True).order_by(RouteLinksDB.order).all()
 
@@ -290,9 +285,9 @@ class RouteLinksCustom(BaseCustomView):
 
 
 class ValParamsCustom(BaseCustomView):
-    column_list = ('name', 'min_value', 'max_value', 'units', 'nfctag')
+    column_list = ('name', 'min_value', 'max_value', 'units', 'plant')
     column_labels = dict(name='Наименование', min_value='Мин.знач.', max_value='Мкас.знач.',
-                         units='Ед.изм.', nfctag='NFC tag')
+                         units='Ед.изм.', plant='Помещение/оборудование')
 
 
 class ValUnitsCustom(BaseCustomView):

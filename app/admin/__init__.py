@@ -37,7 +37,7 @@ admin.add_view(FacilitiesCustom(model=FacilitiesDB, session=db.session, name='П
 admin.add_view(PlantsCustom(model=PlantsDB, session=db.session, name='Оборудование',
                             category='Расположения', menu_icon_type='fa', menu_icon_value='fa-tachometer'))
 
-admin.add_view(CheckupsCustom(model=CheckupsDB, session=db.session, name='Обходы',
+admin.add_view(CheckupsCustom(model=CheckupHeadersDB, session=db.session, name='Обходы',
                               menu_icon_type='fa', menu_icon_value='fa-check-square-o'))
 
 admin.add_link(MenuLinkLogout(name='Выход'))

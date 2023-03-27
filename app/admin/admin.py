@@ -1,12 +1,17 @@
 from flask import Blueprint, request, redirect, url_for, render_template, flash
 from flask_login import login_user, logout_user, current_user
-from werkzeug.security import check_password_hash
 from app.models import UserDB, RoleDB
 from app.admin import login_manager
 from app import db
+import hashlib
 
 
 admin_bp = Blueprint('admin_bp', __name__, template_folder='templates', static_folder='static')
+
+
+def check_passwd_hash(hashed_pass, clear_pass):
+    hash_password = hashlib.md5(clear_pass.encode('utf-8')).hexdigest()
+    return hashed_pass == hash_password
 
 
 @login_manager.user_loader
@@ -23,13 +28,9 @@ def login():
     if request.method == 'POST':
         try:
             user = db.session.query(UserDB).filter(UserDB.login == request.form['user']).one()
-            if check_password_hash(user.password, request.form['password']):
+            if check_passwd_hash(user.password, request.form['password']):
                 role = db.session.query(RoleDB).filter(RoleDB.id == user.role_id).one()
-                if role.role_name in ('admin', 'user_webapp'):
-                    # if request.form.get('rememberme'):
-                    #     login_user(user, remember=True, duration=timedelta(days=7))
-                    # else:
-                    #     login_user(user)
+                if role.name in ('admin', 'user_webapp'):
                     login_user(user)
                     return redirect('./')
                 else:

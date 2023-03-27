@@ -24,10 +24,10 @@ class RoleDB(db.Model, RoleMixin):
     __tablename__ = 'user_roles'
 
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
-    role_name = db.Column(db.String(50))
+    name = db.Column(db.String(50))
 
     def __str__(self):
-        return self.role_name
+        return self.name
 
 
 class FacilitiesDB(db.Model):
@@ -53,32 +53,65 @@ class PlantsDB(db.Model):
         return self.name
     
     
-class ChecksDB(db.Model):
-    __tablename__ = 'checks'
+# class ChecksDB(db.Model):
+#     __tablename__ = 'checks'
+#
+#     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+#     checkup_id = db.Column(db.Integer, db.ForeignKey('checkups.id'), index=True)
+#     note = db.Column(db.String(255))
+#     nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.id'), index=True)
+#     t_check = db.Column(db.DateTime)
+#
+#     checkups = db.relationship('CheckupsDB')
+#     nfctag = db.relationship('NfcTagDB')
+#
+#
+# class CheckupsDB(db.Model):
+#     __tablename__ = 'checkups'
+#
+#     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
+#     completed = db.Column(db.Boolean)
+#     route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), index=True)
+#     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
+#     t_start = db.Column(db.DateTime)
+#     t_end = db.Column(db.DateTime)
+#
+#     routes = db.relationship('RoutesDB')
+#     users = db.relationship('UserDB')
+
+class CheckupHeadersDB(db.Model):
+    __tablename__ = 'checkup_headers'
 
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
-    checkup_id = db.Column(db.Integer, db.ForeignKey('checkups.id'), index=True)
-    note = db.Column(db.String(255))
-    nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.id'), index=True)
-    t_check = db.Column(db.DateTime)
+    user_id = db.Column(db.Integer, index=True)
+    user_name = db.Column(db.String(50))
+    facility_id = db.Column(db.Integer, index=True)
+    facility_name = db.Column(db.String(30))
+    route_id =db. Column(db.Integer, index=True)
+    route_name = db.Column(db.String(30))
+    time_start = db.Column(db.DateTime)
+    time_finish = db.Column(db.DateTime)
+    is_complete = db.Column(db.Boolean)
 
-    checkups = db.relationship('CheckupsDB')
-    nfctag = db.relationship('NfcTagDB')
-    
-    
-class CheckupsDB(db.Model):
-    __tablename__ = 'checkups'
+
+class CheckupDetailsDB(db.Model):
+    __tablename__ = 'checkup_details'
 
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
-    completed = db.Column(db.Boolean)
-    route_id = db.Column(db.Integer, db.ForeignKey('routes.id'), index=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True)
-    t_start = db.Column(db.DateTime)
-    t_end = db.Column(db.DateTime)
+    header_id = db.Column(db.Integer, db.ForeignKey('checkup_headers.id'), index=True)
+    nfc_serial = db.Column(db.String(14))
+    plant_id = db.Column(db.Integer)
+    plant_name = db.Column(db.String(30))
+    val_name = db.Column(db.String(30))
+    val_min = db.Column(db.Float)
+    val_max = db.Column(db.Float)
+    unit_name = db.Column(db.String(30))
+    val_fact = db.Column(db.Float)
+    time_check = db.Column(db.DateTime)
+    note = db.Column(db.String(150))
 
-    routes = db.relationship('RoutesDB')
-    users = db.relationship('UserDB')
-    
+    checkup_header = db.relationship('CheckupHeadersDB')
+
     
 class NfcTagDB(db.Model):
     __tablename__ = 'nfc_tag'
@@ -119,34 +152,22 @@ class RoutesDB(db.Model):
 
     def __str__(self):
         return self.name
-    
-    
-class ValChecksDB(db.Model):
-    __tablename__ = 'val_checks'
 
-    id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
-    value = db.Column(db.Float)
-    param_id = db.Column(db.Integer, db.ForeignKey('val_params.id'), index=True)
-    check_id = db.Column(db.Integer, db.ForeignKey('checks.id'), index=True)
-
-    units = db.relationship('ValParamsDB')
-
-    def __str__(self):
-        return self.name
-    
     
 class ValParamsDB(db.Model):
     __tablename__ = 'val_params'
 
     id = db.Column(db.Integer, primary_key=True, index=True, autoincrement=True)
     name = db.Column(db.String(30))
+    facility_id = db.Column(db.Integer, db.ForeignKey('facilities.id'), index=True)
     unit_id = db.Column(db.Integer, db.ForeignKey('val_units.id'), index=True)
-    nfc_id = db.Column(db.Integer, db.ForeignKey('nfc_tag.id'), index=True)
+    plant_id = db.Column(db.Integer, db.ForeignKey('plants.id'), index=True)
     min_value = db.Column(db.Float)
     max_value = db.Column(db.Float)
 
     units = db.relationship('ValUnitsDB')
-    nfctag = db.relationship('NfcTagDB')
+    plant = db.relationship('PlantsDB')
+    facility = db.relationship('FacilitiesDB')
     
     
 class ValUnitsDB(db.Model):
