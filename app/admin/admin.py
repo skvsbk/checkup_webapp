@@ -16,8 +16,11 @@ def check_passwd_hash(hashed_pass, clear_pass):
 
 @login_manager.user_loader
 def load_user(user_id):
-    user = db.session.query(UserDB).filter(UserDB.id == user_id).one()
-    return user
+    try:
+        user = db.session.query(UserDB).filter(UserDB.id == user_id).one()
+        return user
+    except:
+        return None
 
 
 @admin_bp.route('/login', methods=['POST', 'GET'])

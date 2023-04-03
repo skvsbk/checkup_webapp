@@ -34,7 +34,7 @@ admin.add_view(RouteLinksCustom(model=RouteLinksDB, session=db.session, name='Т
                                 category='Маршруты', menu_icon_type='fa', menu_icon_value='fa-dot-circle-o'))
 admin.add_view(FacilitiesCustom(model=FacilitiesDB, session=db.session, name='Площадки',
                                 category='Расположения', menu_icon_type='fa', menu_icon_value='fa-map-o'))
-admin.add_view(PlantsCustom(model=PlantsDB, session=db.session, name='Оборудование',
+admin.add_view(PlantsCustom(model=PlantsDB, session=db.session, name='Помещения',
                             category='Расположения', menu_icon_type='fa', menu_icon_value='fa-tachometer'))
 
 admin.add_view(CheckupsCustom(model=CheckupHeadersDB, session=db.session, name='Обходы',

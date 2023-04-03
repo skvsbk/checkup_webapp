@@ -5,6 +5,7 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib.sqla.filters import FilterLike, FilterNotLike
 from flask_admin.menu import MenuLink
 from flask_login import current_user
+from sqlalchemy.orm import load_only
 from wtforms import validators, PasswordField
 import hashlib
 from app.models import *
@@ -95,7 +96,7 @@ class UserCustom(BaseCustomView):
     column_filters = (FilterLike(RoleDB.name, 'Роль'),
                       FilterNotLike(RoleDB.name, 'Роль'),
                       'active')
-    column_descriptions = dict(name='Фамилия, имя и отчество')
+    # column_descriptions = dict(name='Фамилия, имя и отчество')
 
     # Encrypt password before create/update
     def on_model_change(self, form, model, is_created):
@@ -109,16 +110,16 @@ class FacilitiesCustom(BaseCustomView):
 
 
 class PlantsCustom(BaseCustomView):
-    column_labels = dict(facilities='Площадка', name='Помещение / Оборудование')
+    column_labels = dict(facilities='Площадка', name='№ помещения', description_plant="Наименование помещения", description_params="Контролируемые параметры")
     column_filters = [FilterLike(FacilitiesDB.name, 'Площадка'),
                       FilterNotLike(FacilitiesDB.name, 'Площадка'),
                       'name']
 
 
 class CheckupsCustom(BaseCustomView):
-    # Uncomment below in prod
-    # can_delete = False
-    # can_edit = False
+    can_delete = False
+    can_edit = False
+    can_create = False
     column_list = ('time_start', 'routes', 'users', 'is_complete')
     column_labels = dict(time_start='Начало обхода', routes='Маршрут', users='Сотрудник', is_complete='Обход завешен')
     column_filters = [FilterLike(UserDB.name, 'Сотрудник'),
@@ -245,29 +246,34 @@ class RoutesCustom(BaseCustomView):
     column_formatters = {"name": _formatter}
 
     @expose('/<route_id>')
-    def user_get(self, route_id):
+    def get_routes_by_id(self, route_id):
         get_title = db.session.query(FacilitiesDB.name, RoutesDB.name).filter(RoutesDB.id == int(route_id)).first()
-        title = [f'Площадка: {get_title} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Маршрут: {get_title[1]}']
+        title = [f'Площадка: {get_title[0]} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Маршрут: {get_title[1]}']
 
         tab_header = ['Порядок обхода',
-                      'Помещение/Оборудование',
+                      '№ помещения',
+                      'Наименование помещения',
+                      'Контролируемые параметры',
                       'NFC',
                       'Мин.значение',
                       'Макс.значение',
                       'Ед.изм']
         """
-        SELECT route_links.order, plants.name, nfc_tag.nfc_serial, 
-        val_params.min_value, val_params.max_value, val_units.name FROM route_links 
-        JOIN nfc_tag ON nfc_tag.id = route_links.nfc_id
-        JOIN plants ON plants.id = nfc_tag.plant_id
+        SELECT route_links.order, plants.name, plants.description_plant, plants.description_params, 
+        nfc_tag.nfc_serial, val_params.min_value, val_params.max_value, val_units.name FROM route_links 
+        JOIN plants ON plants.id = route_links.plant_id
+        LEFT JOIN nfc_tag ON nfc_tag.plant_id = route_links.plant_id
         LEFT JOIN val_params ON val_params.plant_id = plants.id
         LEFT JOIN val_units ON val_units.id = val_params.unit_id
-        WHERE route_links.route_id = '2' AND route_links.active = 1
+        WHERE route_links.route_id = '6' AND route_links.active = 1
+        ORDER BY route_links.order
         """
         # outerjoin(ValUnitsDB, ValUnitsDB.id == ValParamsDB.unit_id). \
-        tab_body = db.session.query(RouteLinksDB.order, PlantsDB.name, NfcTagDB.nfc_serial,
+        tab_body = db.session.query(RouteLinksDB.order, PlantsDB.name, PlantsDB.description_plant,
+                                    PlantsDB.description_params, NfcTagDB.nfc_serial,
                                     ValParamsDB.min_value, ValParamsDB.max_value, ValUnitsDB.name). \
-            join(NfcTagDB, NfcTagDB.id == RouteLinksDB.nfc_id).join(PlantsDB, PlantsDB.id == NfcTagDB.plant_id). \
+            join(PlantsDB, PlantsDB.id == RouteLinksDB.plant_id). \
+            outerjoin(NfcTagDB, NfcTagDB.plant_id == RouteLinksDB.plant_id).\
             outerjoin(ValParamsDB, ValParamsDB.plant_id == PlantsDB.id).\
             outerjoin(ValUnitsDB, ValUnitsDB.id == ValParamsDB.unit_id).\
             filter(RouteLinksDB.route_id == route_id, RouteLinksDB.active == True).order_by(RouteLinksDB.order).all()
@@ -276,19 +282,32 @@ class RoutesCustom(BaseCustomView):
 
 
 class RouteLinksCustom(BaseCustomView):
-    column_list = ('routes', 'nfctag', 'order', 'active')
-    column_labels = dict(routes='Маршрут', nfctag='NFC tag', order='Порядок', active='Активен')
+
+    column_list = ('order', 'route', 'facilities', 'plant', 'active')
+    column_labels = dict(order='Порядок', route='Маршрут', facilities='Площадка', plant='Помещение / Оборудование',
+                          active='Активен')
+
     column_default_sort = 'order'
     column_filters = [FilterLike(RoutesDB.name, 'Маршрут'),
                       FilterNotLike(RoutesDB.name, 'Маршрут'),
+                      FilterLike(FacilitiesDB.name, 'Площадка'),
+                      FilterNotLike(FacilitiesDB.name, 'Площадка'),
                       'active']
+
+    form_columns = ('facilities', 'route', 'plant', 'order', 'active')
 
 
 class ValParamsCustom(BaseCustomView):
-    column_list = ('name', 'min_value', 'max_value', 'units', 'plant')
+    column_list = ('name', 'facility', 'plant', 'min_value', 'max_value', 'units')
     column_labels = dict(name='Наименование', min_value='Мин.знач.', max_value='Мкас.знач.',
-                         units='Ед.изм.', plant='Помещение/оборудование')
+                         units='Ед.изм.', plant='Помещение / Oборудование', facility="Площадка")
+    column_filters = [FilterLike(FacilitiesDB.name, 'Площадка'),
+                      FilterNotLike(FacilitiesDB.name, 'Площадка'),
+                      FilterLike(PlantsDB.name, 'Помещение/оборудование'),
+                      FilterNotLike(PlantsDB.name, 'Помещение/оборудование')
+                      ]
 
+    form_columns = ('facility', 'plant', 'name', 'units', 'min_value', 'max_value')
 
 class ValUnitsCustom(BaseCustomView):
     column_labels = dict(name='Наименование')
