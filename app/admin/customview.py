@@ -31,7 +31,8 @@ class MyAdminIndexView(AdminIndexView):
         JOIN users ON users.id=checkup_headers.user_id
         JOIN routes ON routes.id=checkup_headers.route_id
         JOIN facilities ON facilities.id=routes.facility_id
-        WHERE facilities.id=1
+        WHERE facilities.id=6
+        ORDER BY  checkup_headers.time_start DESC
         """
         tab_body = {}
         for facility in facilities:
@@ -41,7 +42,7 @@ class MyAdminIndexView(AdminIndexView):
                 join(UserDB, UserDB.id == CheckupHeadersDB.user_id).\
                 join(RoutesDB, RoutesDB.id == CheckupHeadersDB.route_id).\
                 join(FacilitiesDB, FacilitiesDB.id == RoutesDB.facility_id).\
-                filter(FacilitiesDB.id == facility.id).order_by(CheckupHeadersDB.time_start.desc()).limit(6).all()[::-1]
+                filter(FacilitiesDB.id == facility.id).order_by(CheckupHeadersDB.time_start.desc()).limit(6).all()
             for item in checkups:
                 markup_string = "<a href='/admin/checkupheadersdb/%s'>%s</a>" % (item[4], item[0])
                 item_to_tab = list(i for i in item)
@@ -120,13 +121,10 @@ class CheckupsCustom(BaseCustomView):
     can_delete = False
     can_edit = False
     can_create = False
-    column_list = ('time_start', 'routes', 'users', 'is_complete')
-    column_labels = dict(time_start='Начало обхода', routes='Маршрут', users='Сотрудник', is_complete='Обход завешен')
-    column_filters = [FilterLike(UserDB.name, 'Сотрудник'),
-                      FilterNotLike(UserDB.name, 'Сотрудник'),
-                      FilterLike(RoutesDB.name, 'Маршрут'),
-                      FilterNotLike(RoutesDB.name, 'Маршрут'),
-                      'is_complete']
+    column_list = ('time_start', 'route_name', 'user_name', 'is_complete')
+    column_labels = dict(time_start='Начало обхода', route_name='Маршрут', user_name='Сотрудник', is_complete='Обход завешен')
+    column_filters = ['user_name', 'route_name', 'is_complete']
+    column_default_sort = ('time_start', True)
 
     def is_accessible(self):
         try:
@@ -206,8 +204,7 @@ class CheckupsCustom(BaseCustomView):
 
 class NFCTagCustom(BaseCustomView):
 
-    # Uncomment below in prod
-    # can_delete = False
+    can_create = False
     column_list = ('nfc_serial', 'plant', 'active')
     column_labels = dict(nfc_serial='Серийной номер', plant='Помещение / оборудование', active='Активный')
     column_filters = [FilterLike(PlantsDB.name, 'Площадка/Оборудование'),

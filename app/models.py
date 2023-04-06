@@ -66,7 +66,7 @@ class CheckupHeadersDB(db.Model):
     user_name = db.Column(db.String(100))
     facility_id = db.Column(db.Integer, index=True)
     facility_name = db.Column(db.String(50))
-    route_id =db. Column(db.Integer, index=True)
+    route_id = db.Column(db.Integer, index=True)
     route_name = db.Column(db.String(100))
     time_start = db.Column(db.DateTime)
     time_finish = db.Column(db.DateTime)
